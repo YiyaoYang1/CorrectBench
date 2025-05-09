@@ -306,6 +306,8 @@ def load_split_config(custom_config_path = CFG_CUS_PATH, default_config_path = C
 
 def get_cfg_path_from_alias(custom_cfg_alias: str|int) -> str:
     if isinstance(custom_cfg_alias, str):
+        if custom_cfg_alias == "haven":
+            config_path = os.path.join("config/configs", "haven.yaml")
         if custom_cfg_alias.isdigit():
             custom_cfg_filename = "custom" + str(custom_cfg_alias) + "." + "yaml"
             config_path = os.path.join("config/configs", custom_cfg_filename)

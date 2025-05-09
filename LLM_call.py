@@ -76,7 +76,6 @@ Time        :   2023/11/17 15:01:06
 LastEdited  :   2024/9/3 16:52:31
 """
 from config import Config
-from openai import OpenAI
 from anthropic import Anthropic
 import loader_saver as ls
 from utils.utils import Timer

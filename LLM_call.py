@@ -1,3 +1,74 @@
+    
+import os
+import re
+import json
+import sys
+
+import os
+import backoff
+import openai
+from openai.error import OpenAIError
+from tqdm import tqdm
+
+@backoff.on_exception(backoff.expo, OpenAIError, max_time=3)
+def prompt_chat_complete(user_content, system_content=None, temperature=0.0, top_p=0.95, engine="athena-gpt-35-turbo", max_tokens=None, **kwargs) -> str:
+    assert engine in ["deepprompt-gpt-4-turbo-2024-04-09-global", "deepprompt-gpt-4o-2024-05-13-global", "deepprompt-gpt-4", "deepprompt-gpt-4-1106-preview"]
+
+    api_version = kwargs.get("api_version", "2024-05-01-preview")
+
+    default_system_content = "You are an AI assistant that helps people find information."
+    if system_content is None:
+        system_content = default_system_content
+
+    azure_openai_params = {
+        'api_key': '',
+        'api_base': 'https://deeppromptcanadaeast.openai.azure.com/',
+        'api_type': 'azure',
+        'api_version': api_version,
+        'engine': engine,
+        'temperature': temperature,
+        'top_p': top_p, # Optional Defaults to 1
+        'n': 1, # Optional Defaults to 1, How many completions to generate for each prompt.
+        'stop': ['<|im_end|>', '// End'],
+    }
+
+    if max_tokens is not None:
+        azure_openai_params['max_tokens'] = int(max_tokens)
+
+    if isinstance(user_content, str):
+        user_content = [user_content]
+
+    messages = [
+        {"role": "system", "content": system_content}
+    ]
+
+    for idx, uc in enumerate(user_content):
+        if idx % 2 == 0:
+            messages.append({"role": "user", "content": uc})
+        else:
+            messages.append({"role": "assistant", "content": uc})            
+
+    response = openai.ChatCompletion.create(messages=messages, **azure_openai_params)
+    return str(response['choices'][0]['message'].get('content') or '').strip()
+
+def jsonline_iter(file_path: str):
+    with open(file_path, "r") as f:
+        for line in f:
+            yield json.loads(line)
+
+def example_to_jsonline(examples: dict, save_file: str):
+    with open(save_file, "a") as f:
+            f.write(json.dumps(examples) + "\n")
+
+def call_gpt4(prompt, temperature=0.5, top_p=0.95):
+    #try:
+    output = prompt_chat_complete(prompt, system_content=None, temperature=0.5, top_p=0.95, engine="deepprompt-gpt-4-turbo-2024-04-09-global")
+    print(output)
+    # except:
+    #     print("got error, return void output!")
+    #     output = ""
+    return output
+
 """
 Description :   This file is related to GPT call, include the function of calling GPT and the function of running GPT in chatgpt mode
 Author      :   Ruidi Qiu (ruidi.qiu@tum.de)
@@ -91,61 +162,7 @@ def llm_call(input_messages, model:str, api_key_path = "config/key_API.json", sy
 
 
 def gpt_call(input_messages, model, api_key_path, system_message = None, temperature = None, json_mode = False):
-    """
-    This func is used to call gpt
-    - input:
-        - input_messages: (not including system message) list of dict like [{"role": "user", "content": "hello"}, {"role": "assistant", "content": "hi"}, ...]
-        - gpt_model: str like "gpt-3.5-turbo-0613"
-        - system_message: (valid when input_messages have no sys_message) customized system message, if None, use default system message
-    - output:
-        - answer: what gpt returns
-        - other_infos: dict:
-            - messages: input_messages + gpt's response, list of dict like [{"role": "user", "content": "hello"}, {"role": "assistant", "content": "hi"}, ...]
-            - time: time used by gpt
-            - system_fingerprint: system_fingerprint of gpt's response
-            - model: model used by gpt
-            - usage: dict: {"completion_tokens": 17, "prompt_tokens": 57, "total_tokens": 74}
-    - notes:
-        - as for the official response format from gpt, see the end of this file
-    """
-    client = enter_api_key(api_key_path)
-    # system message
-    has_sysmessage = False
-    for message in input_messages:
-        if message["role"] == "system":
-            has_sysmessage = True
-            break
-    if not has_sysmessage:
-        if system_message is None:
-            messages = [{"role": "system", "content": DEFAULT_SYS_MESSAGE}]
-        else:
-            messages = [{"role": "system", "content": system_message}]
-    else:
-        messages = []
-    messages.extend(input_messages)
-    # other parameters
-    more_completion_kwargs = {}
-    if temperature is not None:
-        more_completion_kwargs["temperature"] = temperature
-    if json_mode:
-        if not model in JSON_MODELS:
-            more_completion_kwargs["response_format"] = {"type": "json_object"}
-    # call gpt
-    with Timer(print_en=False) as gpt_response:
-        completion = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            **more_completion_kwargs
-        )
-    answer = completion.choices[0].message.content
-    messages.append({"role": "assistant", "content": answer})
-    time = round(gpt_response.interval, 2)
-    system_fingerprint = completion.system_fingerprint
-    usage = {"completion_tokens": completion.usage.completion_tokens, "prompt_tokens": completion.usage.prompt_tokens, "total_tokens": completion.usage.total_tokens}
-    model = completion.model
-    other_infos = {"messages": messages, "time": time, "system_fingerprint": system_fingerprint, "model": model, "usage": usage}
-    # return answer, messages, time, system_fingerprint
-    return answer, other_infos
+    return call_gpt4(input_messages)
 
 def claude_call(input_messages, model, api_key_path, system_message = None, temperature = None, json_mode = False):
     """

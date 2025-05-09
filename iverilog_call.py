@@ -17,8 +17,8 @@ else:
 
 RUN_DIR = "ipynb_demo/verilog_test/" # this is only used when directly run this file
 
-IVERILOG_PATH = "~/bin/bin/iverilog"
-IVERILOG_VVP_PATH = "~/bin/bin/vvp"
+IVERILOG_PATH = "/usr/local/bin/iverilog"
+IVERILOG_VVP_PATH = "/usr/local/bin/vvp"
 
 def iverilog_call(dir, silent = False, timeout = 120):
     """

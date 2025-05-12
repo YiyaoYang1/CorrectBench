@@ -49,7 +49,10 @@ def prompt_chat_complete(user_content, system_content=None, temperature=0.0, top
             messages.append({"role": "assistant", "content": uc})            
 
     response = openai.ChatCompletion.create(messages=messages, **azure_openai_params)
-    return str(response['choices'][0]['message'].get('content') or '').strip()
+    usage = {"completion_tokens": 0, "prompt_tokens": 0, "total_tokens": 0}
+    other_infos = {"messages": messages, "time": 0, "system_fingerprint": 0, "model": engine, "usage": usage}
+    # return answer, messages, time, system_fingerprint
+    return str(response['choices'][0]['message'].get('content') or '').strip(), other_infos
 
 def jsonline_iter(file_path: str):
     with open(file_path, "r") as f:
@@ -62,12 +65,12 @@ def example_to_jsonline(examples: dict, save_file: str):
 
 def call_gpt4(prompt, temperature=0.5, top_p=0.95):
     #try:
-    output = prompt_chat_complete(prompt, system_content=None, temperature=0.5, top_p=0.95, engine="deepprompt-gpt-4-turbo-2024-04-09-global")
+    output, other_infos = prompt_chat_complete(prompt, system_content=None, temperature=0.5, top_p=0.95, engine="deepprompt-gpt-4-turbo-2024-04-09-global")
     print(output)
     # except:
     #     print("got error, return void output!")
     #     output = ""
-    return output
+    return output, other_infos
 
 """
 Description :   This file is related to GPT call, include the function of calling GPT and the function of running GPT in chatgpt mode

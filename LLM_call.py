@@ -43,6 +43,9 @@ def prompt_chat_complete(user_content, system_content=None, temperature=0.0, top
     ]
 
     for idx, uc in enumerate(user_content):
+        if isinstance(uc, dict):
+            assert 'content' in uc.keys()
+            uc = uc['content']
         if idx % 2 == 0:
             messages.append({"role": "user", "content": uc})
         else:
@@ -161,7 +164,7 @@ def llm_call(input_messages, model:str, api_key_path = "config/key_API.json", sy
         output = gpt_call(input_messages, model, api_key_path, system_message, temperature, json_mode)
     else:
         raise ValueError("model %s is not supported."%(model))
-    llm_manager.update_usage(output[1]["usage"]["prompt_tokens"], output[1]["usage"]["completion_tokens"], model)
+    #llm_manager.update_usage(output[1]["usage"]["prompt_tokens"], output[1]["usage"]["completion_tokens"], model)
     return output
 
 

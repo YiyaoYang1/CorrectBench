@@ -49,11 +49,12 @@ def prompt_chat_complete(user_content, system_content=None, temperature=0.0, top
             messages.append({"role": "assistant", "content": uc})            
 
     response = openai.ChatCompletion.create(messages=messages, **azure_openai_params)
+    response = str(response['choices'][0]['message'].get('content') or '').strip()
     messages.append({"role": "assistant", "content": response})
     usage = {"completion_tokens": 0, "prompt_tokens": 0, "total_tokens": 0}
     other_infos = {"messages": messages, "time": 0, "system_fingerprint": 0, "model": engine, "usage": usage}
     # return answer, messages, time, system_fingerprint
-    return str(response['choices'][0]['message'].get('content') or '').strip(), other_infos
+    return response, other_infos
 
 def jsonline_iter(file_path: str):
     with open(file_path, "r") as f:

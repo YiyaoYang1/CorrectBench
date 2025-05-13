@@ -49,6 +49,7 @@ def prompt_chat_complete(user_content, system_content=None, temperature=0.0, top
             messages.append({"role": "assistant", "content": uc})            
 
     response = openai.ChatCompletion.create(messages=messages, **azure_openai_params)
+    messages.append({"role": "assistant", "content": response})
     usage = {"completion_tokens": 0, "prompt_tokens": 0, "total_tokens": 0}
     other_infos = {"messages": messages, "time": 0, "system_fingerprint": 0, "model": engine, "usage": usage}
     # return answer, messages, time, system_fingerprint

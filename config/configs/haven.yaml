@@ -4,7 +4,7 @@ save:
     en: True
     pub: 
         prefix: "NO"
-        subdir: 4omini/CorrectBench
+        subdir: kl/CorrectBench
     log: 
         debug_en: False
 gpt: 
@@ -12,15 +12,13 @@ gpt:
     rtlgen_model: gpt-4o-mini-2024-07-18
 autoline: 
     probset: 
-        path: data/HDLBits/HDLBits_data.jsonl
-        mutant_path: data/HDLBits/HDLBits_data_mutants.jsonl
-        more_info_paths: ['data/HDLBits/HDLBits_data_RTL_4omini_20.jsonl']
+        path: data/HDLBits/wrapped-kl-dataset.jsonl
     promptscript: pychecker
     timeout: 40
     save_compile: False
     debug: 
-        max: 3
-    itermax: 10
+        max: 1
+    itermax: 1
     update_desc: False
     TBcheck: 
         discrim_mode: col_70_wrong_row_25_correct
